@@ -56,6 +56,13 @@ class DataHandler:
         self._tfid.fit_transform(self._data['processed_text']).toarray()
 
     # ======= Public methods =========
+        
+    def get_sample(self, is_spam: bool) -> tuple:
+        """
+        Get a sample of the dataset
+        """
+        sample = self._data[self._data['label_num'] == is_spam].sample(1)
+        return sample['text'].values[0]
 
     def prepare_data(self, raw_text: str) -> list:
         """
@@ -84,8 +91,8 @@ class EmailSpamDetector:
 @st.cache_data
 def data_init():
     with st.spinner("Loading data..."):
-        data_provider = DataHandler()
-        return data_provider
+        data_handler = DataHandler()
+        return data_handler
 
 
 @st.cache_resource
@@ -93,6 +100,14 @@ def load_model():
     with st.spinner("Loading model..."):
         model = EmailSpamDetector()
         return model
+
+
+def init_session():
+    """
+    Initialize the session state.
+    """
+    if "default" not in st.session_state:
+        st.session_state["default"] = ""
 
 
 def init_header():
@@ -104,24 +119,39 @@ def init_header():
     st.divider()
 
 
+def init_sample_input(data_handler: DataHandler):
+    """
+    Initialize the sample input.
+    """
+    st.subheader("Generate samples:")
+    if st.button("Generate spam email"):
+        st.session_state["default"] = data_handler.get_sample(is_spam=True)
+    if st.button("Generate ham email"):
+        st.session_state["default"] = data_handler.get_sample(is_spam=False)
+    st.divider()
+
+
 def init_email_input():
     """
     Initialize the email input.
     """
     st.subheader("Email input")
-    email_input = st.text_area("Enter your email contents:", "")
+    email_input = st.text_area("Enter your email contents:", st.session_state["default"])
+    
     return email_input
 
 
 def main():
-    data_provider = data_init()
+    data_handler = data_init()
     model = load_model()
 
+    init_session()
     init_header()
+    init_sample_input(data_handler)
     email_input = init_email_input()
 
     if st.button("Submit"):
-        email_vectorised = data_provider.prepare_data(email_input)
+        email_vectorised = data_handler.prepare_data(email_input)
         prediction = model.predict(email_vectorised)
         if prediction[0] == 1:
             st.write("Email is spam.")
