@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 DIRNAME = os.path.dirname(__file__)
 STATIC_PATH = os.path.join(DIRNAME, "static")
-MODEL_SAVE = "my_random_forest.joblib"
+MODEL_SAVE = "random_forest_model.joblib"
 MODEL_PATH = os.path.join(STATIC_PATH, MODEL_SAVE)
 
 SEED = 42
@@ -56,7 +56,7 @@ class DataHandler:
         self._tfid.fit_transform(self._data['processed_text']).toarray()
 
     # ======= Public methods =========
-        
+ 
     def get_sample(self, is_spam: bool) -> tuple:
         """
         Get a sample of the dataset
@@ -136,8 +136,10 @@ def init_email_input():
     Initialize the email input.
     """
     st.subheader("Email input")
-    email_input = st.text_area("Enter your email contents:", st.session_state["default"])
-    
+    email_input = st.text_area(
+        "Enter your email contents:", st.session_state["default"]
+    )
+
     return email_input
 
 
